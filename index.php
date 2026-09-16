@@ -54,6 +54,7 @@ $router->get('/grafo/datos', [GraphController::class, 'data']);
 $router->get('/estadisticas', [StatisticsController::class, 'index']);
 $router->get('/configuracion', [SettingsController::class, 'index']);
 $router->post('/configuracion', [SettingsController::class, 'save']);
+$router->post('/configuracion/tema', [SettingsController::class, 'theme']);
 $router->get('/buscar', [SearchController::class, 'index']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', $_SERVER['REQUEST_URI'] ?? '/');

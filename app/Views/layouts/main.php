@@ -5,20 +5,41 @@
 /** @var string $title */
 $workCount = 0;
 $libraryName = 'Archivo personal';
+$themePref = 'system';
 try {
     $workCount = WorkService::countAll();
     $libraryName = SettingsService::get('library_name', 'Archivo personal') ?? 'Archivo personal';
+    $themePref = SettingsService::get('theme', 'system') ?? 'system';
+    if (!in_array($themePref, ['light', 'dark', 'system'], true)) {
+        $themePref = 'system';
+    }
 } catch (Throwable $e) {
     $workCount = 0;
 }
 $flashes = take_flashes();
+$htmlTheme = $themePref === 'dark' ? 'dark' : 'light';
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="<?= e($htmlTheme) ?>" data-theme-pref="<?= e($themePref) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e(($title ?? '') !== '' ? $title . ' · ' . $appName : $appName) ?></title>
+    <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var pref = localStorage.getItem('cg-theme') || root.getAttribute('data-theme-pref') || 'system';
+        var theme = pref;
+        if (pref === 'system') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        if (theme !== 'dark' && theme !== 'light') theme = 'light';
+        root.setAttribute('data-theme', theme);
+        root.setAttribute('data-theme-pref', pref);
+      } catch (e) {}
+    })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
@@ -42,6 +63,18 @@ $flashes = take_flashes();
                 </form>
             </div>
             <div class="topbar-actions">
+                <button
+                    type="button"
+                    class="theme-toggle"
+                    data-theme-toggle
+                    data-theme-url="<?= e(url('/configuracion/tema')) ?>"
+                    data-csrf="<?= e(csrf_token()) ?>"
+                    aria-label="Cambiar tema"
+                    title="Cambiar tema"
+                >
+                    <span class="theme-icon-sun"><?= icon('sun', 16) ?></span>
+                    <span class="theme-icon-moon"><?= icon('moon', 16) ?></span>
+                </button>
                 <span class="meta-pill"><?= format_number($workCount) ?> obras</span>
                 <a class="btn btn-accent btn-sm" href="<?= e(url('/obras/nueva')) ?>"><?= icon('add', 14) ?> Registrar</a>
             </div>

@@ -32,6 +32,68 @@
     if (backdrop) backdrop.addEventListener('click', close);
   }
 
+  function resolveTheme(pref) {
+    if (pref === 'dark' || pref === 'light') return pref;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  }
+
+  function applyTheme(pref) {
+    var root = document.documentElement;
+    var theme = resolveTheme(pref);
+    root.setAttribute('data-theme', theme);
+    root.setAttribute('data-theme-pref', pref);
+    try {
+      localStorage.setItem('cg-theme', pref);
+    } catch (e) {}
+    return theme;
+  }
+
+  function initThemeToggle() {
+    var root = document.documentElement;
+    var pref = root.getAttribute('data-theme-pref') || 'system';
+    try {
+      var stored = localStorage.getItem('cg-theme');
+      if (stored) pref = stored;
+    } catch (e) {}
+    applyTheme(pref);
+
+    if (window.matchMedia) {
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      var onChange = function () {
+        var currentPref = root.getAttribute('data-theme-pref') || 'system';
+        if (currentPref === 'system') applyTheme('system');
+      };
+      if (mq.addEventListener) mq.addEventListener('change', onChange);
+      else if (mq.addListener) mq.addListener(onChange);
+    }
+
+    $$('[data-theme-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var current = root.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+
+        var url = btn.getAttribute('data-theme-url');
+        var csrf = btn.getAttribute('data-csrf') || '';
+        if (!url) return;
+        var body = new FormData();
+        body.append('_csrf', csrf);
+        body.append('theme', next);
+        fetch(url, { method: 'POST', body: body, credentials: 'same-origin' }).catch(function () {});
+      });
+    });
+
+    var settingsTheme = $('#settings-theme');
+    if (settingsTheme) {
+      settingsTheme.addEventListener('change', function () {
+        applyTheme(settingsTheme.value);
+      });
+    }
+  }
+
   function initTypeFields() {
     var typeSelect = $('#work-type');
     if (!typeSelect) return;
@@ -46,7 +108,7 @@
     sync();
   }
 
-  var COLORS = {
+  var COLORS_LIGHT = {
     work: '#152533',
     creator: '#C9922A',
     genre: '#1F6F78',
@@ -54,6 +116,19 @@
     theme: '#6B7C8A',
     experience: '#B85A45'
   };
+
+  var COLORS_DARK = {
+    work: '#E6EDF2',
+    creator: '#E0B04A',
+    genre: '#3D9AA3',
+    era: '#6F9A7E',
+    theme: '#9AABBC',
+    experience: '#D47A66'
+  };
+
+  function graphColors() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? COLORS_DARK : COLORS_LIGHT;
+  }
 
   function parseData(el) {
     try {
@@ -141,7 +216,9 @@
 
     function draw() {
       ctx.clearRect(0, 0, cssW, cssH);
-      ctx.strokeStyle = 'rgba(21,37,51,0.22)';
+      ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark'
+        ? 'rgba(198,208,218,0.28)'
+        : 'rgba(21,37,51,0.22)';
       ctx.lineWidth = 1;
       links.forEach(function (l) {
         ctx.beginPath();
@@ -152,14 +229,14 @@
       nodes.forEach(function (n) {
         var r = n.kind === 'work' ? 8 : 6;
         ctx.beginPath();
-        ctx.fillStyle = COLORS[n.kind] || COLORS.work;
-        ctx.strokeStyle = '#152533';
+        ctx.fillStyle = graphColors()[n.kind] || graphColors().work;
+        ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#C5D0DA' : '#152533';
         ctx.lineWidth = 1.5;
         ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         if (options.labels !== false && (n.kind === 'work' || nodes.length < 50)) {
-          ctx.fillStyle = '#152533';
+          ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#E6EDF2' : '#152533';
           ctx.font = '11px "IBM Plex Mono", monospace';
           ctx.fillText(n.label.slice(0, 22), n.x + 10, n.y + 3);
         }
@@ -226,6 +303,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     initSidebar();
+    initThemeToggle();
     initTypeFields();
     initGraphs();
   });

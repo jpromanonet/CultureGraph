@@ -143,7 +143,8 @@ CREATE TABLE IF NOT EXISTS work_links (
 
 INSERT INTO settings (`key`, `value`) VALUES
   ('library_name', 'Archivo personal'),
-  ('default_status', 'finished')
+  ('default_status', 'finished'),
+  ('theme', 'system')
 ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
 
 INSERT INTO genres (name, slug, color) VALUES
