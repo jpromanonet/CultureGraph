@@ -646,9 +646,10 @@ input[type="search"], input[type="file"], input[type="color"], select, textarea 
 
 .theme-toggle:hover { transform: translate(-1px, -1px); }
 
-.theme-toggle .theme-icon-moon { display: none; }
-html[data-theme="dark"] .theme-toggle .theme-icon-sun { display: none; }
-html[data-theme="dark"] .theme-toggle .theme-icon-moon { display: block; }
+.theme-toggle .theme-icon-sun { display: none; }
+.theme-toggle .theme-icon-moon { display: block; }
+html[data-theme="dark"] .theme-toggle .theme-icon-sun { display: block; }
+html[data-theme="dark"] .theme-toggle .theme-icon-moon { display: none; }
 
 [data-theme="dark"] .badge-slate { background: #2A3540; }
 [data-theme="dark"] .sidebar-backdrop { background: rgba(0, 0, 0, 0.55); }
